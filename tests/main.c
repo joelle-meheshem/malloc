@@ -15,6 +15,12 @@ int main() {
     }
     printf("\n");
 
+    print_heap();
+
+    a = (int *)my_realloc(a, sizeof(int) * 10);
+
+    print_heap();
+
     my_free(a);
 
     int *b = (int *)my_malloc(sizeof(int) * 3);
@@ -28,7 +34,8 @@ int main() {
     my_free(b);
     my_free(c);
 
-    printf("Done!\n");
+    print_heap();
 
+    printf("Done!\n");
     return 0;
 }

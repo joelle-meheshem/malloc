@@ -4,12 +4,12 @@
 #include <stdio.h>
 #include <assert.h>
 #include <pthread.h>
+#include <string.h>
 
-// Global state
 void *heap_start = NULL;
 pthread_mutex_t malloc_lock = PTHREAD_MUTEX_INITIALIZER;
 
-//Helpers
+/* ================= Helpers ================= */
 
 stats *get_header() {
     return (stats *)heap_start;
@@ -27,7 +27,7 @@ area *find_last_block() {
     return cur;
 }
 
-//malloc
+/* ================= malloc ================= */
 
 void *my_malloc(size_t size) {
     pthread_mutex_lock(&malloc_lock);
@@ -53,7 +53,6 @@ void *my_malloc(size_t size) {
     area *cur = get_first_block();
     area *best = NULL;
 
-    // best-fit
     while (cur != NULL) {
         assert(cur->marker == BLOCK_MARKER);
 
@@ -65,7 +64,6 @@ void *my_malloc(size_t size) {
         cur = cur->next;
     }
 
-    // extend heap if needed
     if (best == NULL) {
         area *last = find_last_block();
 
@@ -76,7 +74,6 @@ void *my_malloc(size_t size) {
         best = last;
     }
 
-    // split block
     if (best->length > size + sizeof(area)) {
         area *new_block = (area *)((char *)best + sizeof(area) + size);
 
@@ -102,7 +99,7 @@ void *my_malloc(size_t size) {
     return (char *)best + sizeof(area);
 }
 
-//free
+/* ================= free ================= */
 
 void my_free(void *ptr) {
     if (!ptr) return;
@@ -119,7 +116,6 @@ void my_free(void *ptr) {
 
     block->in_use = false;
 
-    // merge with next
     if (block->next && !block->next->in_use) {
         area *next = block->next;
 
@@ -130,7 +126,6 @@ void my_free(void *ptr) {
             block->next->prev = block;
     }
 
-    // merge with prev
     if (block->prev && !block->prev->in_use) {
         area *prev = block->prev;
 
@@ -142,4 +137,46 @@ void my_free(void *ptr) {
     }
 
     pthread_mutex_unlock(&malloc_lock);
+}
+
+/* ================= realloc ================= */
+
+void *my_realloc(void *ptr, size_t size) {
+    if (!ptr) return my_malloc(size);
+
+    if (size == 0) {
+        my_free(ptr);
+        return NULL;
+    }
+
+    area *block = (area *)((char *)ptr - sizeof(area));
+
+    if (block->length >= size) {
+        return ptr;
+    }
+
+    void *new_ptr = my_malloc(size);
+    if (!new_ptr) return NULL;
+
+    memcpy(new_ptr, ptr, block->length);
+    my_free(ptr);
+
+    return new_ptr;
+}
+
+/* ================= debug ================= */
+
+void print_heap() {
+    area *cur = get_first_block();
+
+    printf("Heap state:\n");
+
+    while (cur) {
+        printf("[%s | size=%u] -> ",
+               cur->in_use ? "USED" : "FREE",
+               cur->length);
+        cur = cur->next;
+    }
+
+    printf("NULL\n");
 }

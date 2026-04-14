@@ -1,5 +1,5 @@
-#ifndef MINI_MALLOC_H
-#define MINI_MALLOC_H
+#ifndef MY_MALLOC_H
+#define MY_MALLOC_H
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -26,8 +26,12 @@ typedef struct stats {
 /* API */
 void *my_malloc(size_t size);
 void my_free(void *ptr);
+void *my_realloc(void *ptr, size_t size);
 
-/* Helpers (optional for debug/tests) */
+/* Debug */
+void print_heap();
+
+/* Helpers */
 stats *get_header();
 area *get_first_block();
 
