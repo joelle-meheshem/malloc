@@ -1,52 +1,144 @@
-Mini Malloc - Custom Memory Allocator
-A thread-safe, heap-based memory allocator implemented in C. This project mimics the behavior of the standard malloc and free functions by managing memory blocks directly using system calls.
+# 🚀 MiniMalloc – Custom Memory Allocator in C
 
-🧠 Implementation Details
-The allocator manages a linked list of memory blocks (areas) within a custom heap space initialized via sbrk.
+## 📌 Overview
 
-Key Features:
-Allocation Strategy: Best-Fit. The allocator scans the free list to find the smallest available block that fits the requested size, reducing wasted memory.
+MiniMalloc is a custom implementation of a dynamic memory allocator in C, inspired by the behavior of `malloc`, `free`, and `realloc`.
 
-Thread Safety: Fully thread-safe implementation using pthread_mutex to handle concurrent memory requests.
+The project demonstrates low-level memory management by manually controlling heap allocation using system calls and managing memory blocks with metadata.
 
-Splitting: When a found block is significantly larger than the requested size, it is split into two to preserve space for future allocations.
+---
 
-Coalescing (Merging): During my_free, the allocator automatically merges adjacent free blocks (both forward and backward) to combat fragmentation.
+## ⚙️ Features
 
-Safety Markers: Each block contains a BLOCK_MARKER (0xDD) to validate pointers during the free process and prevent corruption.
+* ✅ Custom `my_malloc` and `my_free`
+* ✅ `my_realloc` implementation
+* ✅ Best-fit allocation strategy
+* ✅ Block splitting to reduce fragmentation
+* ✅ Coalescing (merging adjacent free blocks)
+* ✅ Thread-safe using `pthread_mutex`
+* ✅ Heap expansion using `sbrk`
+* ✅ Heap visualization with `print_heap`
 
-🏗 Data Structures
-The stats Header
-Located at the very start of the heap, it tracks global metadata:
+---
 
-magic: Verification constant (0x55).
+## 🧩 Memory Layout
 
-blocks: Total number of existing blocks.
+```
+[ stats header ][ block ][ block ][ block ] ...
+```
 
-pages: Number of memory pages allocated from the OS.
+Each block contains metadata:
 
-The area Struct
-Each memory block is preceded by metadata to manage the doubly linked list:
+```
+| marker | prev | next | in_use | size |
+```
 
-C
-typedef struct area {
-    uint8_t marker;     // 0xDD for validation
-    struct area *prev;  // Pointer to previous block
-    struct area *next;  // Pointer to next block
-    bool in_use;        // Allocation status
-    uint32_t length;    // Size of the usable data area
-} area;
-🚀 How to Run
-Clone the repository:
+---
 
-Bash
-git clone https://github.com/joelle-meheshem/malloc.git
-cd malloc
-Compile the test program:
+## 🧪 Example Usage
 
-Bash
-gcc -o malloc_test main.c my_malloc.c -lpthread
-Run the executable:
+```c
+#include "my_malloc.h"
 
-Bash
-./malloc_test
+int main() {
+    int *arr = (int *)my_malloc(5 * sizeof(int));
+
+    for (int i = 0; i < 5; i++) {
+        arr[i] = i * 10;
+    }
+
+    arr = (int *)my_realloc(arr, 10 * sizeof(int));
+
+    my_free(arr);
+}
+```
+
+---
+
+## 🔍 Debugging (Heap Visualization)
+
+The allocator includes a debug function:
+
+```c
+print_heap();
+```
+
+Example output:
+
+```
+Heap state:
+[USED | size=20] -> [FREE | size=4000] -> NULL
+```
+
+---
+
+## 🛠️ Build & Run
+
+```bash
+make
+./test
+```
+
+Or manually:
+
+```bash
+gcc -Wall -Wextra -pthread -Iinclude src/my_malloc.c tests/main.c -o test
+./test
+```
+
+---
+
+## 📂 Project Structure
+
+```
+malloc_project/
+│
+├── include/
+│   └── my_malloc.h
+│
+├── src/
+│   └── my_malloc.c
+│
+├── tests/
+│   └── main.c
+│
+├── Makefile
+└── README.md
+```
+
+---
+
+## 🧠 Key Concepts Demonstrated
+
+* Heap memory management
+* Fragmentation handling
+* Pointer arithmetic
+* Linked-list based memory tracking
+* Thread synchronization
+* Low-level systems programming
+
+---
+
+## 🔥 Recent Improvements
+
+* Added `realloc` support
+* Implemented heap visualization (`print_heap`)
+* Refactored project into modular structure (src/include/tests)
+* Added Makefile for easier compilation
+
+---
+
+## 📊 Future Improvements
+
+* [ ] Replace `sbrk` with `mmap`
+* [ ] Add memory alignment support
+* [ ] Detect double free errors
+* [ ] Add memory corruption protection (canaries)
+* [ ] Implement performance benchmarks
+
+---
+
+## 👩‍💻 Author
+
+Joelle Meheshem
+Computer Science Student
